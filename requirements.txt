@@ -1,2 +1,5 @@
 pytest
 psycopg[binary]
+aiogram
+pydantic
+pydantic-settings
