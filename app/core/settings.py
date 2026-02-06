@@ -9,7 +9,12 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    tg_bot_token: str | None = Field(default=None, alias="TG_BOT_TOKEN")
+    tg_bot_token: str = Field(
+        default="",
+        alias="TG_BOT_TOKEN",
+        min_length=1,
+        validate_default=True,
+    )
 
 
 def get_settings() -> Settings:
