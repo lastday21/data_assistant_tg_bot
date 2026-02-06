@@ -16,6 +16,8 @@ class Settings(BaseSettings):
         validate_default=True,
     )
 
+    level_logging: str = Field(default="INFO", alias="LEVEL_LOGGING")
+
 
 def get_settings() -> Settings:
     return Settings()
