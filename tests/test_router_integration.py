@@ -5,6 +5,8 @@ import pytest
 from aiogram import Bot, Dispatcher
 from aiogram.types import Chat, Message, Update, User
 
+pytestmark = pytest.mark.integration
+
 
 def build_update(text: str, update_id: int) -> Update:
     user = User(id=1, is_bot=False, first_name="Test")

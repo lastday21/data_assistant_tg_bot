@@ -14,7 +14,7 @@ _LEVELS: dict[str, int] = {
 }
 
 
-def setup_logging(level: str = logging.INFO) -> None:
+def setup_logging(level: int | str = logging.INFO) -> None:
     if isinstance(level, str):
         normalized = level.strip().upper()
         level = _LEVELS.get(normalized, logging.INFO)
