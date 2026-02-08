@@ -4,3 +4,4 @@ aiogram
 pydantic
 pydantic-settings
 pytest-asyncio
+sqlalchemy

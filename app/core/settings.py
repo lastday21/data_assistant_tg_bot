@@ -16,8 +16,17 @@ class Settings(BaseSettings):
         validate_default=True,
     )
 
-    level_logging: str = Field(default="INFO", alias="LEVEL_LOGGING")
-    database_url: str | None = Field(default=None, alias="DATABASE_URL")
+    level_logging: str = Field(
+        default="INFO",
+        alias="LEVEL_LOGGING",
+    )
+
+    database_url: str = Field(
+        default="",
+        alias="DATABASE_URL",
+        min_length=1,
+        validate_default=True,
+    )
 
 
 def get_settings() -> Settings:

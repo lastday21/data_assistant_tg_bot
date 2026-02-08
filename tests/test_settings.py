@@ -4,18 +4,33 @@ from pydantic import ValidationError
 from app.core.settings import Settings
 
 
-def test_settings_reads_token_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
+def set_valid_env(monkeypatch: pytest.MonkeyPatch, **overrides: str) -> None:
     monkeypatch.setitem(Settings.model_config, "env_file", None)
-    monkeypatch.setenv("TG_BOT_TOKEN", "123:ABC")
 
+    env = {
+        "TG_BOT_TOKEN": "123:ABC",
+        "DATABASE_URL": "postgresql+psycopg://app:app@localhost:5432/video",
+    }
+    env.update(overrides)
+
+    for key, value in env.items():
+        monkeypatch.setenv(key, value)
+
+
+def test_settings_ok(monkeypatch: pytest.MonkeyPatch) -> None:
+    set_valid_env(monkeypatch)
     settings = Settings()
+    assert settings.tg_bot_token
+    assert settings.database_url
 
-    assert settings.tg_bot_token == "123:ABC"
+
+def test_settings_fails_without_token(monkeypatch: pytest.MonkeyPatch) -> None:
+    set_valid_env(monkeypatch, TG_BOT_TOKEN="")
+    with pytest.raises(ValidationError):
+        Settings()
 
 
-def test_settings_raises_without_token(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setitem(Settings.model_config, "env_file", None)
-    monkeypatch.delenv("TG_BOT_TOKEN", raising=False)
-
+def test_settings_fails_without_database_url(monkeypatch: pytest.MonkeyPatch) -> None:
+    set_valid_env(monkeypatch, DATABASE_URL="")
     with pytest.raises(ValidationError):
         Settings()
