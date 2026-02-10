@@ -33,7 +33,7 @@ class YandexGPTClient:
             raise LlmClientError("YANDEX_FOLDER_ID is empty")
 
         request_payload: dict[str, Any] = {
-            "modelUri": f"gpt://{self._config.folder_id}/yandexgpt/rc",
+            "modelUri": f"gpt://{self._config.folder_id}/aliceai-llm",
             "completionOptions": {
                 "stream": False,
                 "temperature": self._config.temperature,
