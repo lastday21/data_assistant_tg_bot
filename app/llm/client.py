@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 import aiohttp
 
@@ -31,7 +32,7 @@ class YandexGPTClient:
         if not self._config.folder_id.strip():
             raise LlmClientError("YANDEX_FOLDER_ID is empty")
 
-        payload = {
+        request_payload: dict[str, Any] = {
             "modelUri": f"gpt://{self._config.folder_id}/yandexgpt/rc",
             "completionOptions": {
                 "stream": False,
@@ -51,28 +52,43 @@ class YandexGPTClient:
         async with aiohttp.ClientSession(timeout=timeout) as session:
             async with session.post(
                 self._config.endpoint_url,
-                json=payload,
+                json=request_payload,
                 headers=headers,
             ) as response:
                 if response.status != 200:
                     text = await response.text()
                     raise LlmClientError(f"YandexGPT error {response.status}: {text}")
 
-                data = await response.json()
+                data: dict[str, Any] = await response.json(content_type=None)
 
-        alternatives = data.get("alternatives")
-        if not alternatives:
-            raise LlmClientError(f"Empty alternatives: {data}")
+        result = data.get("result")
+        response_payload = result if isinstance(result, dict) else data
 
-        message = alternatives[0].get("message") or {}
-        text = (message.get("text") or "").strip()
+        alternatives = response_payload.get("alternatives")
+        if not isinstance(alternatives, list) or not alternatives:
+            raise LlmClientError(f"Empty alternatives: {response_payload}")
+
+        first_alt = alternatives[0]
+        if not isinstance(first_alt, dict):
+            raise LlmClientError(f"Invalid alternative: {first_alt!r}")
+
+        message = first_alt.get("message")
+        message_dict = message if isinstance(message, dict) else {}
+
+        text_value = message_dict.get("text")
+        text = text_value.strip() if isinstance(text_value, str) else ""
         if not text:
-            raise LlmClientError(f"Empty message text: {data}")
+            raise LlmClientError(f"Empty message text: {response_payload}")
 
-        sql = text.strip()
+        sql = text
 
         if sql.startswith("```"):
-            sql = sql.strip("`").strip()
+            lines = sql.splitlines()
+            if lines and lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].startswith("```"):
+                lines = lines[:-1]
+            sql = "\n".join(lines).strip()
 
         if sql.endswith(";"):
             sql = sql[:-1].rstrip()
