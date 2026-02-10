@@ -35,4 +35,6 @@ async def handle_text(
         await message.answer("Не смог обработать запрос")
         return
 
-    await message.answer(str(value))
+    response_text = str(value)
+    logger.info("telegram_response=%s", response_text)
+    await message.answer(response_text)
