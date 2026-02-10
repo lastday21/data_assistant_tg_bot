@@ -12,8 +12,12 @@ pytestmark = pytest.mark.integration
 @pytest.mark.asyncio
 async def test_db_smoke() -> None:
     settings = get_settings()
-    if not settings.database_url:
-        pytest.skip("DATABASE_URL is not set")
+    # try:
+    #     settings = get_settings()
+    # except ValidationError:
+    #     pytest.skip("Required env vars are not set")
+    # if not settings.database_url:
+    #     pytest.skip("DATABASE_URL is not set")
 
     engine = build_engine(settings.database_url)
     session_factory = async_sessionmaker(

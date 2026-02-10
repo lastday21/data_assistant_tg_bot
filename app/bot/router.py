@@ -1,4 +1,5 @@
 from typing import Awaitable, Callable, cast
+import logging
 
 from aiogram import F, Router
 from aiogram.filters import CommandStart
@@ -7,6 +8,7 @@ from aiogram.types import Message
 from app.llm.prompt import build_messages
 
 router = Router(name=__name__)
+logger = logging.getLogger(__name__)
 
 
 @router.message(CommandStart())
@@ -22,8 +24,15 @@ async def handle_text(
 ) -> None:
     text = cast(str, message.text)
 
-    messages = build_messages(text)
-    sql = await llm_request(messages)
-    value = await sql_execute(sql)
+    logger.info("input_text=%s", text)
+
+    try:
+        messages = build_messages(text)
+        sql = await llm_request(messages)
+        value = await sql_execute(sql)
+    except Exception:
+        logger.exception("failed_to_process_request")
+        await message.answer("Не смог обработать запрос")
+        return
 
     await message.answer(str(value))

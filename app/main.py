@@ -19,6 +19,7 @@ async def main() -> None:
     llm_config = YandexGptConfig(
         api_key=settings.yandex_api_key,
         folder_id=settings.yandex_folder_id,
+        timeout_seconds=settings.llm_timeout_seconds,
     )
     llm_client = YandexGPTClient(llm_config)
 

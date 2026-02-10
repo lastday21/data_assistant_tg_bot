@@ -49,17 +49,22 @@ class YandexGPTClient:
 
         timeout = aiohttp.ClientTimeout(total=self._config.timeout_seconds)
 
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            async with session.post(
-                self._config.endpoint_url,
-                json=request_payload,
-                headers=headers,
-            ) as response:
-                if response.status != 200:
-                    text = await response.text()
-                    raise LlmClientError(f"YandexGPT error {response.status}: {text}")
+        try:
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                async with session.post(
+                    self._config.endpoint_url,
+                    json=request_payload,
+                    headers=headers,
+                ) as response:
+                    if response.status != 200:
+                        text = await response.text()
+                        raise LlmClientError(
+                            f"YandexGPT error {response.status}: {text}"
+                        )
 
-                data: dict[str, Any] = await response.json(content_type=None)
+                    data: dict[str, Any] = await response.json(content_type=None)
+        except TimeoutError as exc:
+            raise LlmClientError("LLM request timeout") from exc
 
         result = data.get("result")
         response_payload = result if isinstance(result, dict) else data

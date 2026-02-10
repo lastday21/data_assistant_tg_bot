@@ -1,13 +1,15 @@
 from __future__ import annotations
 
+import logging
 import re
+import time
 from decimal import Decimal
 from typing import Any
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from app.db.session import session_factory
+logger = logging.getLogger(__name__)
 
 
 class ModuleError(Exception):
@@ -56,19 +58,32 @@ def _validation_result(value: Any) -> int | float:
 
 
 async def execute_sql(
-    sql, *, session_maker: async_sessionmaker[AsyncSession] = session_factory
+    sql: str,
+    *,
+    session_maker: async_sessionmaker[AsyncSession] | None = None,
 ) -> int | float:
     _validation_sql(sql)
+    logger.info("generated_sql=%s", sql)
 
-    async with session_maker() as session:
-        result = await session.execute(text(sql))
+    if session_maker is None:
+        from app.db.session import get_session_factory
 
-        keys = list(result.keys())
-        if len(keys) != 1:
-            raise ScalarsError(f"Ожидалась 1 колонка, а получили {len(keys)}")
+        session_maker = get_session_factory()
 
-        rows = result.fetchmany(2)
-        if len(rows) != 1:
-            raise ScalarsError(f"Ожидалась 1 строка, а получили {len(rows)}")
+    started = time.perf_counter()
+    try:
+        async with session_maker() as session:
+            result = await session.execute(text(sql))
 
-        return _validation_result(rows[0][0])
+            keys = list(result.keys())
+            if len(keys) != 1:
+                raise ScalarsError(f"Ожидалась 1 колонка, а получили {len(keys)}")
+
+            rows = result.fetchmany(2)
+            if len(rows) != 1:
+                raise ScalarsError(f"Ожидалась 1 строка, а получили {len(rows)}")
+
+            return _validation_result(rows[0][0])
+    finally:
+        elapsed_ms = (time.perf_counter() - started) * 1000
+        logger.info("sql_execution_time_ms=%.2f", elapsed_ms)

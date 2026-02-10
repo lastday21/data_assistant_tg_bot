@@ -34,3 +34,14 @@ def test_settings_fails_without_database_url(monkeypatch: pytest.MonkeyPatch) ->
     set_valid_env(monkeypatch, DATABASE_URL="")
     with pytest.raises(ValidationError):
         Settings()
+
+
+def test_settings_timeout_values(monkeypatch: pytest.MonkeyPatch) -> None:
+    set_valid_env(
+        monkeypatch,
+        LLM_TIMEOUT_SECONDS="45",
+        DB_TIMEOUT_SECONDS="20",
+    )
+    settings = Settings()
+    assert settings.llm_timeout_seconds == 45
+    assert settings.db_timeout_seconds == 20
