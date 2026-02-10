@@ -27,6 +27,8 @@ class Settings(BaseSettings):
         min_length=1,
         validate_default=True,
     )
+    yandex_api_key: str = Field(default="", alias="YANDEX_API_KEY")
+    yandex_folder_id: str = Field(default="", alias="YANDEX_FOLDER_ID")
 
 
 def get_settings() -> Settings:
